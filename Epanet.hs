@@ -1,5 +1,5 @@
 --
--- epanet_haskell_example.hs: Example to illustrate EPANET Toolkit usage in Haskell
+-- Epanet.hs: EPANET Toolkit module in Haskell
 --
 -- Author:
 --   Steffen Macke (sdteffen@sdteffen.de)
@@ -19,10 +19,16 @@
 -- along with this program.  If not, see <http:--www.gnu.org/licenses/>.
 --
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Main where
+module Epanet (getVersion) where
 
-import Epanet
+import Foreign
+import Foreign.C
+import Foreign.Ptr (Ptr, nullPtr)
 
-main = do
-  print $ getVersion
+foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
 
+getVersion = unsafePerformIO $
+  alloca $ \vptr -> do
+    print $ c_ENgetversion vptr
+    v <- peek vptr
+    return $ fromIntegral v
