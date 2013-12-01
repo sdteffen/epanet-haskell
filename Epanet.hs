@@ -29,6 +29,9 @@ foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt 
 
 getVersion = unsafePerformIO $
   alloca $ \vptr -> do
-    print $ c_ENgetversion vptr
-    v <- peek vptr
-    return $ fromIntegral v
+    if 0 == (c_ENgetversion vptr)
+      then do 
+        v <- peek vptr
+        return $ fromIntegral v
+      else do
+        return 0
