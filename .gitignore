@@ -9,3 +9,5 @@ cabal-dev
 epanet_haskell_example
 Net1.txt
 Net1.bin
+Net1copy.inp
+.DS_Store
