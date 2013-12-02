@@ -19,14 +19,21 @@
 -- along with this program.  If not, see <http:--www.gnu.org/licenses/>.
 --
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Epanet (getVersion) where
+module Epanet (open, getVersion) where
 
 import Foreign
 import Foreign.C
 import Foreign.Ptr (Ptr, nullPtr)
 
-foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
+foreign import ccall unsafe "toolkit.h ENopen" c_ENopen :: CString -> CString -> CString -> CInt
+open :: String -> String -> String -> Int
+open f1 f2 f3 = unsafePerformIO $
+  withCString f1 $ \cf1 ->
+    withCString f2 $ \cf2 ->
+      withCString f3 $ \cf3 ->
+        return $ fromIntegral $ c_ENopen cf1 cf2 cf3
 
+foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
 getVersion = unsafePerformIO $
   alloca $ \vptr -> do
     if 0 == (c_ENgetversion vptr)

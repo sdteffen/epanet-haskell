@@ -24,5 +24,6 @@ module Main where
 import Epanet
 
 main = do
-  print $ getVersion
+  putStrLn $ "getVersion: " ++ (show getVersion)
+  putStrLn $ "open 'Net1.inp' 'Net1.txt' 'Net1.bin': " ++ show (open "Net1.inp" "Net1.txt" "Net1.bin")
 
