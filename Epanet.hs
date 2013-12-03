@@ -153,11 +153,39 @@ open f1 f2 f3 = unsafePerformIO $
       withCString f3 $ \cf3 ->
         return $ fromIntegral $ c_ENopen cf1 cf2 cf3
 
-foreign import call unsafe "toolkit.h ENsaveinpfile" c_ENsaveinpfile :: CString -> CInt
+foreign import ccall unsafe "toolkit.h ENsaveinpfile" c_ENsaveinpfile :: CString -> CInt
 saveInpFile :: String -> Int
 open f1 = unsafePerformIO $
   withCString f1 $\cf1 ->
     return $ fromIntegral $ c_ENsaveinpfile cf1
+
+foreign import ccall unsafe "toolkit.h Enclose" c_ENclose :: CInt
+close :: Int
+close = unsafePerformIO $
+  return $ fromIntegral $ c_ENclose
+
+foreign import ccall unsafe "toolkit.h ENsolveH" c_ENsolveH :: CInt
+solveH :: Int
+solveH = unsafePerformIO $
+  return $ fromIntegral $ c_ENsolveH
+
+foreign import ccall unsafe "toolkit.h ENsaveH" c_ENsaveH :: CInt
+saveH :: Int 
+saveH = unsafePerformIO $
+  return $ fromIntegral $ c_ENsaveH
+
+foreign import ccall unsafe "toolkit.h ENopenH" c_ENopenH :: CInt
+openH :: Int 
+openH = unsafePerformIO $
+  return $ fromIntegral $ c_ENopenH
+
+-- int ENinitH(int)
+
+-- int errcode ENrunH(long *t)
+-- runH :: (Int, Long)
+
+-- int errcode ENnextH(long *t)
+-- nextH :: (Int, Long)
 
 foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
 getVersion = unsafePerformIO $

@@ -26,5 +26,6 @@ import Epanet
 main = do
   putStrLn $ "getVersion: " ++ show getVersion
   putStrLn $ "open 'Net1.inp' 'Net1.txt' 'Net1.bin': " ++ show (open "Net1.inp" "Net1.txt" "Net1.bin")
+  putStrLn $ "close: " ++ show close
   putStrLn $ "saveInpFile 'Net1copy.inp': " ++ show (saveInpFile "Net1copy.inp")
 
