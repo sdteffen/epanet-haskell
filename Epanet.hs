@@ -19,7 +19,7 @@
 -- along with this program.  If not, see <http:--www.gnu.org/licenses/>.
 --
 {-# LANGUAGE ForeignFunctionInterface #-}
-module Epanet (open, saveInpFile, close, solveH, saveH, openH, getVersion) where
+module Epanet where
 
 import Foreign
 import Foreign.C
@@ -141,6 +141,7 @@ en_FIFO = 2
 en_LIFO = 3
 
 en_NOSAVE = 0 -- Save-results-to-file flag
+en_SAVE :: Int
 en_SAVE = 1
 
 en_INITFLOW =10 -- Re-initialize flows flag
@@ -179,10 +180,22 @@ openH :: Int
 openH = unsafePerformIO $
   return $ fromIntegral $ c_ENopenH
 
--- int ENinitH(int)
+foreign import ccall unsafe "toolkit.h ENinitH" c_ENinitH :: CInt -> CInt
+initH :: Int -> Int
+initH flag = unsafePerformIO $
+  return $ fromIntegral $ c_ENinitH (fromIntegral flag)
 
--- int errcode ENrunH(long *t)
--- runH :: (Int, Long)
+foreign import ccall unsafe "toolkit.h ENrunH" c_ENrunH :: Ptr CLong -> CInt
+runH :: Either Int Int
+runH = unsafePerformIO $
+  alloca $ \tptr -> do
+    let errcode = c_ENrunH tptr
+    if 0 == errcode
+      then do
+        t <- peek tptr
+        return $ Right (fromIntegral t)
+      else do
+         return $ Left (fromIntegral errcode)
 
 -- int errcode ENnextH(long *t)
 -- nextH :: (Int, Long)
