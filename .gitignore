@@ -5,6 +5,7 @@ cabal-dev
 *.chi
 *.chs.h
 *~
+*.tmp
 .virthualenv
 epanet_haskell_example
 Net1.txt
