@@ -385,6 +385,45 @@ closeQ :: Int
 closeQ = unsafePerformIO $
   return $ fromIntegral $ c_ENcloseQ
 
+foreign import ccall unsafe "toolkit.h ENwriteline" c_ENwriteline :: CString -> CInt
+writeLine :: String -> Int
+writeLine l = unsafePerformIO $
+  withCString l $ \cl ->
+    return $ fromIntegral $ c_ENwriteline cl
+
+foreign import ccall unsafe "toolkit.h ENreport" c_ENreport :: CInt
+report :: Int
+report = unsafePerformIO $
+  return $ fromIntegral $ c_ENreport
+
+foreign import ccall unsafe "toolkit.h ENresetreport" c_ENresetreport :: CInt
+resetReport :: Int
+resetReport = unsafePerformIO $
+  return $ fromIntegral $ c_ENresetreport
+
+foreign import ccall unsafe "toolkit.h ENsetreport" c_ENsetreport :: CString -> CInt
+setReport :: String -> Int
+setReport f = unsafePerformIO $
+  withCString f $ \cf ->
+    return $ fromIntegral $ c_ENsetreport cf 
+
+-- int DLLEXPORT ENgetcontrol(int cindex, int *ctype, int *lindex, float *setting, int *nindex, float *level)
+--foreign import ccall unsafe "toolkit.h ENgetcontrol" :: CInt -> Ptr CInt -> Ptr CInt -> Ptr CFloat -> Ptr CInt -> Ptr --CFloat -> CInt
+--getControl ::  Int -> Either Int (Int, Int, Float, Int, Float)
+--getControl cindex = unsafePerformIO $
+  
+
+-- int  DLLEXPORT ENgetcount(int, int *);
+-- int  DLLEXPORT ENgetoption(int, float *);
+-- int  DLLEXPORT ENgettimeparam(int, long *);
+-- int  DLLEXPORT ENgetflowunits(int *);
+-- int  DLLEXPORT ENgetpatternindex(char *, int *);
+-- int  DLLEXPORT ENgetpatternid(int, char *);
+-- int  DLLEXPORT ENgetpatternlen(int, int *);
+-- int  DLLEXPORT ENgetpatternvalue(int, int, float *);
+-- int  DLLEXPORT ENgetqualtype(int *, int *);
+-- int  DLLEXPORT ENgeterror(int, char *, int);
+
 foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
 getVersion = unsafePerformIO $
   alloca $ \vptr -> do

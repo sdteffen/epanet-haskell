@@ -39,6 +39,9 @@ main = do
   putStrLn $ "nextQ = " ++ show nextQ
   putStrLn $ "stepQ = " ++ show stepQ
   putStrLn $ "solveQ = " ++ show solveQ
+  putStrLn $ "resetReport = " ++ show resetReport
+  putStrLn $ "writeLine 'Hello, Haskell' = " ++ show (writeLine "Hello, Haskell")
   putStrLn $ "close = " ++ show close
+  putStrLn $ "setReport 'Net1copy.txt' = " ++ show (setReport "Net1copy.txt")
   putStrLn $ "saveInpFile 'Net1copy.inp' = " ++ show (saveInpFile "Net1copy.inp")
 
