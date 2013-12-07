@@ -407,22 +407,148 @@ setReport f = unsafePerformIO $
   withCString f $ \cf ->
     return $ fromIntegral $ c_ENsetreport cf 
 
--- int DLLEXPORT ENgetcontrol(int cindex, int *ctype, int *lindex, float *setting, int *nindex, float *level)
---foreign import ccall unsafe "toolkit.h ENgetcontrol" :: CInt -> Ptr CInt -> Ptr CInt -> Ptr CFloat -> Ptr CInt -> Ptr --CFloat -> CInt
---getControl ::  Int -> Either Int (Int, Int, Float, Int, Float)
---getControl cindex = unsafePerformIO $
-  
+foreign import ccall unsafe "toolkit.h ENgetcontrol" c_ENgetcontrol :: CInt -> Ptr CInt -> Ptr CInt -> Ptr CFloat -> Ptr CInt -> Ptr CFloat -> CInt
+getControl ::  Int -> Either Int (Int, Int, Float, Int, Float)
+getControl cindex = unsafePerformIO $
+  alloca $ \ctypeptr -> do
+    alloca $ \lindexptr -> do
+      alloca $ \settingptr -> do
+        alloca $ \nindexptr -> do
+          alloca $ \levelptr -> do
+            let errcode = c_ENgetcontrol (fromIntegral cindex) ctypeptr lindexptr settingptr nindexptr levelptr
+            if 0 == errcode
+              then do
+                ctype <- peek ctypeptr
+                lindex <- peek lindexptr
+                setting <- peek settingptr
+                nindex <- peek nindexptr
+                level <- peek levelptr
+                return $ Right (fromIntegral ctype, fromIntegral lindex, realToFrac setting, fromIntegral nindex, realToFrac level)
+              else do
+                return $ Left (fromIntegral errcode) 
 
--- int  DLLEXPORT ENgetcount(int, int *);
--- int  DLLEXPORT ENgetoption(int, float *);
--- int  DLLEXPORT ENgettimeparam(int, long *);
--- int  DLLEXPORT ENgetflowunits(int *);
--- int  DLLEXPORT ENgetpatternindex(char *, int *);
--- int  DLLEXPORT ENgetpatternid(int, char *);
--- int  DLLEXPORT ENgetpatternlen(int, int *);
--- int  DLLEXPORT ENgetpatternvalue(int, int, float *);
--- int  DLLEXPORT ENgetqualtype(int *, int *);
--- int  DLLEXPORT ENgeterror(int, char *, int);
+foreign import ccall unsafe "toolkit.h ENgetcount" c_ENgetcount :: CInt -> Ptr CInt -> CInt
+getCount :: Int -> Either Int Int
+getCount code = unsafePerformIO $
+  alloca $ \countptr -> do
+    let errcode = c_ENgetcount (fromIntegral code) countptr
+    if 0 == errcode
+      then do
+        count <- peek countptr
+        return $ Right (fromIntegral count)
+      else do
+        return $ Left (fromIntegral errcode)
+ 
+foreign import ccall unsafe "toolkit.h ENgetoption" c_ENgetoption :: CInt -> Ptr CFloat -> CInt
+getOption :: Int -> Either Int Float
+getOption code = unsafePerformIO $
+  alloca $ \valueptr -> do
+    let errcode = c_ENgetoption (fromIntegral code) valueptr
+    if 0 == errcode
+      then do
+        value <- peek valueptr
+        return $ Right (realToFrac value)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgettimeparam" c_ENgettimeparam :: CInt -> Ptr CLong -> CInt
+getTimeParam :: Int -> Either Int Int64
+getTimeParam code = unsafePerformIO $
+  alloca $ \valueptr -> do
+    let errcode = c_ENgettimeparam (fromIntegral code) valueptr
+    if 0 == errcode
+      then do
+        value <- peek valueptr
+        return $ Right (fromIntegral value)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetflowunits" c_ENgetflowunits :: Ptr CInt -> CInt
+getFlowUnits :: Either Int Int
+getFlowUnits = unsafePerformIO $
+  alloca $ \codeptr -> do
+    let errcode = c_ENgetflowunits codeptr
+    if 0 == errcode
+      then do
+        code <- peek codeptr
+        return $ Right (fromIntegral code)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetpatternindex" c_ENgetpatternindex :: CString -> Ptr CInt -> CInt
+getPatternIndex :: String -> Either Int Int
+getPatternIndex id = unsafePerformIO $
+  withCString id $ \cid ->
+    alloca $ \indexptr -> do
+      let errcode = c_ENgetpatternindex cid indexptr
+      if 0 == errcode
+        then do
+          index <- peek indexptr
+          return $ Right (fromIntegral index)
+       else do
+          return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetpatternid" c_ENgetpatternid :: CInt -> CString -> CInt
+getPatternId :: Int -> Either Int String
+getPatternId index = unsafePerformIO $
+  alloca $ \idptr -> do
+    let errcode = c_ENgetpatternid (fromIntegral index) idptr
+    if 0 == errcode
+      then do
+        id <- peekCString idptr
+        return $ Right id
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetpatternlen" c_ENgetpatternlen :: CInt -> Ptr CInt -> CInt
+getPatternLen :: Int -> Either Int Int
+getPatternLen index = unsafePerformIO $
+  alloca $ \lenptr -> do
+    let errcode = c_ENgetpatternlen (fromIntegral index) lenptr
+    if 0 == errcode
+      then do
+        len <- peek lenptr
+        return $ Right (fromIntegral len)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetpatternvalue" c_ENgetpatternvalue :: CInt -> CInt -> Ptr CFloat -> CInt
+getPatternValue :: Int -> Int -> Either Int Float
+getPatternValue index period = unsafePerformIO $
+  alloca $ \valueptr -> do
+    let errcode = c_ENgetpatternvalue (fromIntegral index) (fromIntegral period) valueptr
+    if 0 == errcode
+      then do
+        value <- peek valueptr
+        return $ Right (realToFrac value)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetqualtype" c_ENgetqualtype :: Ptr CInt -> Ptr CInt -> CInt
+getQualType :: Either Int (Int, Int)
+getQualType = unsafePerformIO $
+  alloca $ \qualcodeptr -> do
+    alloca $ \tracenodeptr -> do
+      let errcode = c_ENgetqualtype qualcodeptr tracenodeptr
+      if 0 == errcode
+        then do
+          qualcode <- peek qualcodeptr
+          tracenode <- peek tracenodeptr
+          return $ Right (fromIntegral qualcode, fromIntegral tracenode)
+        else do
+          return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgeterror" c_ENgeterror :: CInt -> CString -> CInt -> CInt
+getError :: Int -> Int -> Either Int String
+getError code n = unsafePerformIO $
+  withCString (replicate n ' ') $ \cerrmsg -> do
+    let errcode = c_ENgeterror (fromIntegral code) cerrmsg (fromIntegral n)
+    if 0 == errcode
+      then do
+	errmsg <- peekCString cerrmsg
+	return $ Right errmsg
+      else do
+        return $ Left (fromIntegral errcode)
 
 foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
 getVersion = unsafePerformIO $
