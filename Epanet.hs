@@ -21,9 +21,13 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Epanet where
 
-import Foreign
+import Foreign (alloca, Int64, peek)
 import Foreign.C
 import Foreign.Ptr (Ptr, nullPtr)
+import System.IO.Unsafe (unsafePerformIO)
+
+-- Required only for setPattern
+-- import qualified Data.Vector.Storable as DVS
 
 en_ELEVATION :: Int
 en_ELEVATION = 0 -- Node parameters
@@ -550,7 +554,120 @@ getError code n = unsafePerformIO $
       else do
         return $ Left (fromIntegral errcode)
 
+foreign import ccall unsafe "toolkit.h ENgetnodeindex" c_ENgetnodeindex :: CString -> Ptr CInt -> CInt
+getNodeIndex :: String -> Either Int Int
+getNodeIndex id = unsafePerformIO $
+  withCString id $ \cid ->
+    alloca $ \indexptr -> do
+      let errcode = c_ENgetnodeindex cid indexptr
+      if 0 == errcode
+        then do
+          index <- peek indexptr
+          return $ Right (fromIntegral index)
+       else do
+          return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetnodeid" c_ENgetnodeid :: CInt -> CString -> CInt
+getNodeId :: Int -> Either Int String
+getNodeId index = unsafePerformIO $
+  alloca $ \idptr -> do
+    let errcode = c_ENgetnodeid (fromIntegral index) idptr
+    if 0 == errcode
+      then do
+        id <- peekCString idptr
+        return $ Right id
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetnodetype" c_ENgetnodetype :: CInt -> Ptr CInt -> CInt
+getNodeType :: Int -> Either Int Int
+getNodeType index = unsafePerformIO $
+  alloca $ \typeptr -> do
+    let errcode = c_ENgetnodetype (fromIntegral index) typeptr
+    if 0 == errcode
+      then do
+        t <- peek typeptr
+        return $ Right (fromIntegral t)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetnodevalue" c_ENgetnodevalue :: CInt -> CInt -> Ptr CFloat -> CInt
+getNodeValue :: Int -> Int -> Either Int Float
+getNodeValue index code = unsafePerformIO $
+  alloca $ \valueptr -> do
+    let errcode = c_ENgetnodevalue (fromIntegral index) (fromIntegral code) valueptr
+    if 0 == errcode
+      then do
+        value <- peek valueptr
+        return $ Right (realToFrac value)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetlinkindex" c_ENgetlinkindex :: CString -> Ptr CInt -> CInt
+getLinkIndex :: String -> Either Int Int
+getLinkIndex id = unsafePerformIO $
+  withCString id $ \cid ->
+    alloca $ \indexptr -> do
+      let errcode = c_ENgetlinkindex cid indexptr
+      if 0 == errcode
+        then do
+          index <- peek indexptr
+          return $ Right (fromIntegral index)
+       else do
+          return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetlinkid" c_ENgetlinkid :: CInt -> CString -> CInt
+getLinkId :: Int -> Either Int String
+getLinkId index = unsafePerformIO $
+  alloca $ \idptr -> do
+    let errcode = c_ENgetlinkid (fromIntegral index) idptr
+    if 0 == errcode
+      then do
+        id <- peekCString idptr
+        return $ Right id
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetlinktype" c_ENgetlinktype :: CInt -> Ptr CInt -> CInt
+getLinkType :: Int -> Either Int Int
+getLinkType index = unsafePerformIO $
+  alloca $ \typeptr -> do
+    let errcode = c_ENgetlinktype (fromIntegral index) typeptr
+    if 0 == errcode
+      then do
+        t <- peek typeptr
+        return $ Right (fromIntegral t)
+      else do
+        return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetlinknodes" c_ENgetlinknodes :: CInt -> Ptr CInt -> Ptr CInt -> CInt
+getLinkNodes :: Int -> Either Int (Int, Int)
+getLinkNodes index = unsafePerformIO $
+  alloca $ \node1ptr -> do
+    alloca $ \node2ptr -> do
+      let errcode = c_ENgetlinknodes (fromIntegral index) node1ptr node2ptr
+      if 0 == errcode
+        then do
+          node1 <- peek node1ptr
+          node2 <- peek node2ptr
+          return $ Right (fromIntegral node1, fromIntegral node2)
+        else do
+          return $ Left (fromIntegral errcode)
+
+foreign import ccall unsafe "toolkit.h ENgetlinkvalue" c_ENgetlinkvalue :: CInt -> CInt -> Ptr CFloat -> CInt
+getLinkValue :: Int -> Int -> Either Int Float
+getLinkValue index code = unsafePerformIO $
+  alloca $ \valueptr -> do
+    let errcode = c_ENgetlinkvalue (fromIntegral index) (fromIntegral code) valueptr
+    if 0 == errcode
+      then do
+        value <- peek valueptr
+        return $ Right (realToFrac value)
+      else do
+        return $ Left (fromIntegral errcode)
+
 foreign import ccall unsafe "toolkit.h ENgetversion" c_ENgetversion :: Ptr CInt -> CInt
+getVersion :: Int
 getVersion = unsafePerformIO $
   alloca $ \vptr -> do
     if 0 == (c_ENgetversion vptr)
@@ -558,4 +675,41 @@ getVersion = unsafePerformIO $
         v <- peek vptr
         return $ fromIntegral v
       else do
-        return 0
+        return $ fromIntegral 0
+
+foreign import ccall unsafe "toolkit.h ENsetcontrol" c_ENsetcontrol :: CInt -> CInt -> CInt -> CFloat -> CInt -> CFloat -> CInt
+setControl :: Int -> Int -> Int -> Float -> Int -> Float -> Int
+setControl cindex ctype lindex setting nindex level = unsafePerformIO $
+  return $ fromIntegral $ c_ENsetcontrol (fromIntegral cindex) (fromIntegral ctype) (fromIntegral lindex) (realToFrac setting) (fromIntegral nindex) (realToFrac level)
+ 
+foreign import ccall unsafe "toolkit.h ENsetnodevalue" c_ENsetnodevalue :: CInt -> CInt -> CFloat -> CInt
+setNodeValue :: Int -> Int -> Float -> Int
+setNodeValue index code v = unsafePerformIO $
+  return $ fromIntegral $ c_ENsetnodevalue (fromIntegral index) (fromIntegral code) (realToFrac v)
+  
+foreign import ccall unsafe "toolkit.h ENsetlinkvalue" c_ENsetlinkvalue :: CInt -> CInt -> CFloat -> CInt
+setLinkValue :: Int -> Int -> Float -> Int
+setLinkValue index code v = unsafePerformIO $
+  return $ fromIntegral $ c_ENsetlinkvalue (fromIntegral index) (fromIntegral code) (realToFrac v)
+
+foreign import ccall unsafe "toolkit.h ENaddpattern" c_ENaddpattern :: CString -> CInt
+addPattern :: String -> Int
+addPattern p = unsafePerformIO $
+  withCString p $ \cp -> do
+    return $ fromIntegral $ c_ENaddpattern cp
+
+-- Use setPatternValue instead
+-- foreign import ccall unsafe "toolkit.h ENsetpattern" c_ENsetpattern :: CInt -> Ptr CFloat -> CInt -> CInt
+-- setPattern :: Int -> DVS.Vector CFloat -> Int
+-- setPattern index f = unsafePerformIO $
+--   DVS.unsafeWith f $ \fptr (return (fromIntegral (c_ENsetpattern (fromIntegral index) fptr (fromIntegral (DVS.length f))))
+  
+foreign import ccall unsafe "toolkit.h ENsetpatternvalue" c_ENsetpatternvalue :: CInt -> CInt -> CFloat -> CInt
+setPatternValue :: Int -> Int -> Float -> Int
+setPatternValue index period value = unsafePerformIO $
+  return $ fromIntegral $ c_ENsetpatternvalue (fromIntegral index) (fromIntegral period) (realToFrac value)
+
+-- int  DLLEXPORT ENsettimeparam(int, long);
+-- int  DLLEXPORT ENsetoption(int, float);
+-- int  DLLEXPORT ENsetstatusreport(int);
+-- int  DLLEXPORT ENsetqualtype(int, char *, char *, char *);
