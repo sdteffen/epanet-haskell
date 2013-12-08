@@ -253,6 +253,14 @@ en_SAVE = 1
 en_INITFLOW :: Int
 en_INITFLOW =10 -- Re-initialize flows flag
 
+foreign import ccall unsafe "toolkit.h ENepanet" c_ENepanet :: CString -> CString -> CString -> Ptr CInt -> CInt
+epanet :: String -> String -> String -> Int
+epanet f1 f2 f3 = unsafePerformIO $
+  withCString f1 $ \cf1 ->
+    withCString f2 $ \cf2 ->
+      withCString f3 $ \cf3 ->
+        return $ fromIntegral $ c_ENepanet cf1 cf2 cf3 nullPtr
+  
 foreign import ccall unsafe "toolkit.h ENopen" c_ENopen :: CString -> CString -> CString -> CInt
 open :: String -> String -> String -> Int
 open f1 f2 f3 = unsafePerformIO $
@@ -709,7 +717,26 @@ setPatternValue :: Int -> Int -> Float -> Int
 setPatternValue index period value = unsafePerformIO $
   return $ fromIntegral $ c_ENsetpatternvalue (fromIntegral index) (fromIntegral period) (realToFrac value)
 
--- int  DLLEXPORT ENsettimeparam(int, long);
--- int  DLLEXPORT ENsetoption(int, float);
--- int  DLLEXPORT ENsetstatusreport(int);
--- int  DLLEXPORT ENsetqualtype(int, char *, char *, char *);
+foreign import ccall unsafe "toolkit.h ENsettimeparam" c_ENsettimeparam :: CInt -> CLong -> CInt
+setTimeParam :: Int -> Int -> Int
+setTimeParam code value = unsafePerformIO $
+  return $ fromIntegral $ c_ENsettimeparam (fromIntegral code) (fromIntegral value)
+
+foreign import ccall unsafe "toolkit.h ENsetoption" c_ENsetoption :: CInt -> CFloat -> CInt
+setOption :: Int -> Float -> Int
+setOption code v = unsafePerformIO $
+  return $ fromIntegral $ c_ENsetoption (fromIntegral code) (realToFrac v)
+
+foreign import ccall unsafe "toolkit.h ENsetstatusreport" c_ENsetstatusreport :: CInt -> CInt
+setStatusReport :: Int -> Int
+setStatusReport code = unsafePerformIO $
+  return $ fromIntegral $ c_ENsetstatusreport (fromIntegral code)
+
+foreign import ccall unsafe "toolkit.h ENsetqualtype" c_ENsetqualtype :: CInt -> CString -> CString -> CString -> CInt
+setQualType :: Int -> String -> String -> String -> Int
+setQualType qualcode chemname chemunits tracenode = unsafePerformIO $
+  withCString chemname $ \cchemname -> do
+    withCString chemunits $ \cchemunits -> do
+      withCString tracenode $ \ctracenode -> do
+        return $ fromIntegral $ c_ENsetqualtype (fromIntegral qualcode) cchemname cchemunits ctracenode
+
