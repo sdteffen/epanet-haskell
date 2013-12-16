@@ -7,7 +7,7 @@ name:                epanet-haskell
 -- PVP summary:      +-+------- breaking API changes (from EPANET source)
 --                   | | +----- non-breaking API additions (from EPANET source)
 --                   | | | +--- code changes with no API change (Haskell changes)
-version:             2.0.12.3
+version:             2.0.12.4
 
 -- A short (one-line) description of the package.
 synopsis:            Haskell binding for EPANET
@@ -16,7 +16,7 @@ synopsis:            Haskell binding for EPANET
 description:         Hydraulic Analysis package for water supply networks
 
 -- URL for the project homepage or repository.
-homepage:            https://epanet.de/developer/haskell.html
+homepage:            http://epanet.de/developer/haskell.html
 
 -- The license under which the package is released.
 license:             GPL-3
